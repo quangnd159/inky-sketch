@@ -1,5 +1,6 @@
 package dev.inkysketch.app;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** A deliberately boring, high-contrast control that survives low-contrast e-ink modes. */
+@SuppressLint("AppCompatCustomView")
 final class BinaryButton extends TextView {
     private static final Map<String, Drawable.ConstantState> BACKGROUNDS = new HashMap<>();
     private String label = "";
