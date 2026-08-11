@@ -19,9 +19,22 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("INKY_SKETCH_KEYSTORE_PATH")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = file(keystorePath)
+            }
+            storePassword = System.getenv("INKY_SKETCH_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("INKY_SKETCH_KEY_ALIAS")
+            keyPassword = System.getenv("INKY_SKETCH_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

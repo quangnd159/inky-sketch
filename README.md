@@ -24,6 +24,11 @@ Use Java 17 and the checked-in Gradle wrapper:
 
 The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Android SDK 35 is required. The build retrieves Onyx Pen SDK 1.5.4 from the BOOX Maven repository.
 
+Tagged releases are built and signed only in GitHub Actions. Release signing material is
+provided through repository secrets; keystores and passwords must never be committed.
+The workflow verifies the signature, legacy package ID, version, and zero-permission
+contract before publishing the APK and its SHA-256 checksum as a GitHub prerelease.
+
 ## Performance contract
 
 Raw point-move callbacks perform no allocations, persistence, UI updates, or canvas repainting. Onyx renders the live stroke or eraser preview. At pen-up, Inky Sketch commits one document operation and schedules an immutable snapshot on a single background writer.
