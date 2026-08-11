@@ -17,6 +17,7 @@ public final class EditorControllerTest {
         assertFalse(fixture.controller.dispatch(EditorCommand.undo()));
         assertTrue(fixture.controller.dispatch(EditorCommand.stroke(stroke(InkDocument.Brush.PEN))));
         assertEquals(1, fixture.controller.snapshot().document().selectedLayer().strokes.size());
+        assertTrue(fixture.target.lastRequest.dirtyRect != null);
         assertTrue(fixture.controller.snapshot().state.canUndo);
         assertTrue(fixture.controller.dispatch(EditorCommand.undo()));
         assertTrue(fixture.controller.snapshot().document().selectedLayer().strokes.isEmpty());
@@ -141,7 +142,12 @@ public final class EditorControllerTest {
 
     static final class RecordingTarget implements DocumentRenderer.Target {
         int beginCount;
-        @Override public boolean begin(RenderRequest request) { beginCount++; return true; }
+        RenderRequest lastRequest;
+        @Override public boolean begin(RenderRequest request) {
+            beginCount++;
+            lastRequest = request;
+            return true;
+        }
         @Override public void draw(String layerId, InkDocument.Stroke stroke) {}
         @Override public void end() {}
     }

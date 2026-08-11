@@ -32,6 +32,7 @@ public final class MainActivity extends Activity {
     private LinearLayout topBar;
     private LinearLayout toolbar;
     private ProjectPersistence persistence;
+    private EditorPreferences editorPreferences;
     private EditorController controller;
     private RawInkSession rawInk;
     private EditorChromeView chrome;
@@ -55,6 +56,8 @@ public final class MainActivity extends Activity {
         InkDocument document = persistence.load();
         controller = new EditorController(mainThread, document, persistence, renderer,
                 persistence.isWritable());
+        editorPreferences = new EditorPreferences(this);
+        editorPreferences.restore(controller);
         BooxRawInkAdapter adapter = new BooxRawInkAdapter(surface, topBar, toolbar, density);
         rawInk = new RawInkSession(adapter, mainThread, this::afterPresentation,
                 new RawInkSession.GestureSink() {
@@ -67,6 +70,7 @@ public final class MainActivity extends Activity {
                 });
         controller.addListener(snapshot -> {
             latest = snapshot;
+            editorPreferences.save(snapshot.state);
             rawInk.updateEditorState(snapshot.state);
             chrome.render(snapshot);
             layerPanel.render(snapshot);

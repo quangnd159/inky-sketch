@@ -177,13 +177,18 @@ final class EditorController {
         if (!documentWritable) return false;
         InkDocument before = document.copy();
         boolean changed;
+        InkDocument.Stroke addedStroke = null;
         RenderRequest.Reason reason = RenderRequest.Reason.LAYER;
         switch (command.type) {
             case ADD_STROKE:
                 CompletedStroke completed = (CompletedStroke) command.value;
                 changed = document.selectedLayer().visible && !completed.points.isEmpty();
-                if (changed) document.addStroke(new InkDocument.Stroke(java.util.UUID.randomUUID().toString(),
-                        completed.brush, completed.presetId, 1, completed.width, completed.tone, completed.points));
+                if (changed) {
+                    addedStroke = new InkDocument.Stroke(java.util.UUID.randomUUID().toString(),
+                            completed.brush, completed.presetId, 1, completed.width,
+                            completed.tone, completed.points);
+                    document.addStroke(addedStroke);
+                }
                 reason = RenderRequest.Reason.STROKE;
                 break;
             case ERASE:
@@ -224,7 +229,8 @@ final class EditorController {
         if (!changed) return false;
         history.record(before);
         queueSave();
-        renderer.render(snapshot(), RenderRequest.full(reason));
+        renderer.render(snapshot(), addedStroke == null
+                ? RenderRequest.full(reason) : RenderRequest.stroke(addedStroke));
         return true;
     }
 
