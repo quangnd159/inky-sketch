@@ -140,7 +140,7 @@ final class EditorChromeView {
     }
 
     private void selectOrRack(EditorState.Tool tool) {
-        EditorState current = tool == EditorState.Tool.PEN ? EditorState.Tool.PEN
+        EditorState.Tool current = tool == EditorState.Tool.PEN ? EditorState.Tool.PEN
                 : tool == EditorState.Tool.PENCIL ? EditorState.Tool.PENCIL : EditorState.Tool.MARKER;
         // A selected family opens its rack; switching family remains a single-tap action.
         BinaryButton button = toolButtons.get(current == EditorState.Tool.PEN ? 0
