@@ -1,4 +1,4 @@
-package dev.einkstudio.poc;
+package dev.inkysketch.app;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

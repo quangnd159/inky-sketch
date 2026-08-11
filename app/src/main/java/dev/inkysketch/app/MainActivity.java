@@ -1,4 +1,4 @@
-package dev.einkstudio.poc;
+package dev.inkysketch.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -37,7 +37,7 @@ import java.util.Deque;
 import java.util.List;
 
 public final class MainActivity extends Activity {
-    private static final String TAG = "EinkStudio";
+    private static final String TAG = "InkySketch";
     private static final float[] WIDTHS = {2.5f, 5f, 9f};
     private static final int[] COLORS = {0xFF000000, 0xFF444444, 0xFF888888, 0xFFBBBBBB};
     private static final String[] COLOR_NAMES = {"Black", "Dark", "Gray", "Light"};

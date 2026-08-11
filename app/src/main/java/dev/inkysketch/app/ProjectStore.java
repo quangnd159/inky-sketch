@@ -1,4 +1,4 @@
-package dev.einkstudio.poc;
+package dev.inkysketch.app;
 
 import android.content.Context;
 import android.util.Log;
@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 final class ProjectStore {
-    private static final String TAG = "EinkStudioStore";
+    private static final String TAG = "InkySketchStore";
     private static final String FILE_NAME = "canvas.json";
     private static final String BACKUP_NAME = "canvas.json.bak";
     private final File directory;

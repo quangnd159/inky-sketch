@@ -1,34 +1,25 @@
 # Inky Sketch
 
-Inky Sketch is a standalone Android proof of concept for a Procreate-like drawing app designed around e-ink. It is separate from the Inkflow Obsidian plugin.
+Inky Sketch is a tiny, offline, e-ink-first drawing app for Android and BOOX. Open the app and sketch immediately: there is no account, cloud service, setup flow, or permission prompt.
 
-The app targets BOOX devices because Onyx exposes a raw pen pipeline that can draw ahead of Android's normal compositor. Live ink goes directly from the stylus to Onyx `TouchHelper` on a native `SurfaceView`; document changes, UI work, rendering, history, and saving happen only after pen-up.
+The editor provides pressure-aware pen, pencil, and marker brushes, a four-tone palette, three brush sizes, a pixel/segment eraser, layers, undo and redo, and automatic local saving. Live BOOX pen input uses Onyx's raw pen pipeline so ink can appear ahead of Android's normal compositor.
 
-## Version 0.2.0 POC
+## Privacy and storage
 
-- Pressure-aware pen, pencil, and marker brushes
-- Four-tone e-ink palette and three brush sizes
-- Clean paper canvas for dense linework and broad grayscale values
-- Pixel/segment eraser that splits strokes instead of deleting whole strokes
-- Multiple layers with add, select, rename, reorder, visibility, clear, and delete controls
-- Undo and redo for marks, erasing, and layer mutations
-- Automatic migration of the original v1 flat canvas into an `Imported canvas` layer
-- Atomic local autosave with last-good backup recovery
-- Monochrome, high-contrast, animation-free interface
-- No network, storage, account, overlay, or accessibility permissions
-
-## Performance contract
-
-The raw point-move callbacks perform no allocations, persistence, UI updates, or canvas repainting. Onyx renders the live stroke/eraser preview. Inky Sketch receives the completed point list at pen-up, commits one document operation, and schedules an immutable snapshot on a single background writer.
-
-## Storage
-
-The one local project lives in app-private storage. Writes are flushed to a new file and atomically moved over the active document; the previous valid document is retained as a recovery backup. No storage permission is requested.
+Inky Sketch requests no Android permissions and makes no network connection at runtime. The current drawing is stored in app-private storage with atomic replacement and a last-good recovery backup.
 
 ## Build
 
+Use Java 17 and the checked-in Gradle wrapper:
+
 ```bash
-gradle testDebugUnitTest assembleDebug
+./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-The isolated GitHub Actions workflow runs only for `codex/eink-studio-poc` and its release tags. The project requires Java 17, Gradle 8.9, and Android SDK 35, and retrieves Onyx Pen SDK 1.5.4 from the BOOX Maven repository.
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Android SDK 35 is required. The build retrieves Onyx Pen SDK 1.5.4 from the BOOX Maven repository.
+
+## Performance contract
+
+Raw point-move callbacks perform no allocations, persistence, UI updates, or canvas repainting. Onyx renders the live stroke or eraser preview. At pen-up, Inky Sketch commits one document operation and schedules an immutable snapshot on a single background writer.
+
+See [PRODUCT.md](PRODUCT.md) for product scope, [DESIGN.md](DESIGN.md) for the e-ink interface contract, and [AGENTS.md](AGENTS.md) for contributor rules.

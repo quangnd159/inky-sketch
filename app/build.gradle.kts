@@ -3,15 +3,16 @@ plugins {
 }
 
 android {
-    namespace = "dev.einkstudio.poc"
+    namespace = "dev.inkysketch.app"
     compileSdk = 35
 
     defaultConfig {
+        // Permanent legacy ID: retaining it preserves upgrades and app-private drawing data.
         applicationId = "dev.einkstudio.poc"
         minSdk = 26
         targetSdk = 30
-        versionCode = 2
-        versionName = "0.2.0-poc"
+        versionCode = 3
+        versionName = "0.3.0-alpha.1"
 
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")

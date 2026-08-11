@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:name=".EinkStudioApplication"
+        android:name=".InkySketchApplication"
         android:allowBackup="false"
         android:label="Inky Sketch"
         android:supportsRtl="true"
