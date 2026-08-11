@@ -22,4 +22,8 @@ final class EditorChromeSpec {
     static int dockCellWidthDp(int availableWidthDp) {
         return availableWidthDp / DOCK_ITEM_COUNT;
     }
+
+    static int layerPanelWidthDp(int availableWidthDp) {
+        return Math.min(320, Math.round(availableWidthDp * .45f));
+    }
 }

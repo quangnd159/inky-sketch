@@ -68,8 +68,9 @@ public final class MainActivity extends Activity {
             @Override public void openPanel(EditorState.Panel panel) { openPanel(panel); }
             @Override public void closePanel() { closePanel(); }
             @Override public void retrySave() { ui(EditorCommand.retrySave()); }
-            @Override public void fullRefresh() { controller.requestRender(
-                    RenderRequest.full(RenderRequest.Reason.SURFACE)); }
+            @Override public void fullRefresh() { rawInk.performUiAction(
+                    () -> controller.requestRender(RenderRequest.full(RenderRequest.Reason.SURFACE)),
+                    root::invalidate); }
         });
         topBar = (LinearLayout) chrome.topBar();
         toolbar = (LinearLayout) chrome.dock();

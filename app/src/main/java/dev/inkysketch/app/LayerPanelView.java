@@ -2,6 +2,8 @@ package dev.inkysketch.app;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
@@ -11,6 +13,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 final class LayerPanelView {
+    private static Drawable.ConstantState PANEL_BACKGROUND;
     interface Host {
         void command(EditorCommand command);
         void closePanel();
@@ -28,14 +31,18 @@ final class LayerPanelView {
         panel = new LinearLayout(context);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(dp(8), dp(6), dp(8), dp(6));
-        panel.setBackgroundColor(Color.WHITE);
+        panel.setBackground(panelBackground());
         panel.setVisibility(View.GONE);
         ScrollView scroll = new ScrollView(context);
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
         scroll.addView(content);
         panel.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(-1, dp(250), Gravity.BOTTOM);
+        int screenDp = Math.round(context.getResources().getDisplayMetrics().widthPixels
+                / context.getResources().getDisplayMetrics().density);
+        int width = dp(EditorChromeSpec.layerPanelWidthDp(screenDp));
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(width, -1, Gravity.END);
+        params.topMargin = dp(56);
         params.bottomMargin = dp(EditorChromeSpec.DOCK_HEIGHT_DP);
         root.addView(panel, params);
     }
@@ -63,12 +70,19 @@ final class LayerPanelView {
         for (int i = document.layers().size() - 1; i >= 0; i--) {
             InkDocument.Layer layer = document.layers().get(i);
             String text = (layer.id.equals(selected.id) ? "✓ " : "  ")
-                    + (layer.visible ? "● " : "○ ") + layer.name + " · " + layer.strokes.size();
+                    + layer.name + " · " + layer.strokes.size();
+            LinearLayout layerRow = horizontal();
             BinaryButton row = BinaryButton.create(context, text,
                     view -> host.command(EditorCommand.selectLayer(layer.id)));
             row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
             row.setSelectedState(layer.id.equals(selected.id));
-            content.addView(row, full(48));
+            layerRow.addView(row, new LinearLayout.LayoutParams(0, dp(48), 1f));
+            BinaryButton visibility = BinaryButton.create(context, layer.visible ? "Hide" : "Show", view -> {
+                host.command(EditorCommand.selectLayer(layer.id));
+                host.command(EditorCommand.toggleLayerVisibility());
+            });
+            layerRow.addView(visibility, new LinearLayout.LayoutParams(dp(64), dp(48)));
+            content.addView(layerRow, full(48));
         }
         if (mode == EditorState.Panel.LAYER_RENAME) showRename(selected);
         else if (mode == EditorState.Panel.LAYER_CLEAR_CONFIRM) showConfirmation(selected, true);
@@ -147,5 +161,15 @@ final class LayerPanelView {
 
     private int dp(int value) {
         return Math.round(value * context.getResources().getDisplayMetrics().density);
+    }
+
+    private Drawable panelBackground() {
+        if (PANEL_BACKGROUND == null) {
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setColor(Color.WHITE);
+            drawable.setStroke(dp(2), Color.BLACK);
+            PANEL_BACKGROUND = drawable.getConstantState();
+        }
+        return PANEL_BACKGROUND.newDrawable(context.getResources());
     }
 }

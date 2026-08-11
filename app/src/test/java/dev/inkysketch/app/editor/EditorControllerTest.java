@@ -66,6 +66,21 @@ public final class EditorControllerTest {
         assertEquals(1, fixture.target.beginCount);
     }
 
+    @Test public void saveTransitionsAndRetryAreVisibleToChrome() {
+        Fixture fixture = new Fixture();
+        fixture.controller.dispatch(EditorCommand.stroke(stroke(InkDocument.Brush.PEN)));
+        assertEquals(EditorState.SaveState.SAVING, fixture.controller.snapshot().state.saveState);
+        fixture.persistence.complete(true);
+        assertEquals(EditorState.SaveState.SAVED, fixture.controller.snapshot().state.saveState);
+        fixture.controller.dispatch(EditorCommand.renameLayer("Draft"));
+        fixture.persistence.complete(false);
+        assertEquals(EditorState.SaveState.FAILED, fixture.controller.snapshot().state.saveState);
+        assertTrue(fixture.controller.dispatch(EditorCommand.retrySave()));
+        assertEquals(EditorState.SaveState.SAVING, fixture.controller.snapshot().state.saveState);
+        fixture.persistence.complete(true);
+        assertEquals(EditorState.SaveState.SAVED, fixture.controller.snapshot().state.saveState);
+    }
+
     private static CompletedStroke stroke(InkDocument.Brush brush) {
         return new CompletedStroke(brush, 5f, 0xFF000000,
                 Arrays.asList(point(0.1f, 0.2f), point(0.4f, 0.5f)));
@@ -92,10 +107,14 @@ public final class EditorControllerTest {
 
     static final class FakePersistence implements EditorController.Persistence {
         int saves;
+        long generation;
+        Callback callback;
         @Override public void save(InkDocument document, long generation, Callback callback) {
             saves++;
-            callback.onComplete(generation, true);
+            this.generation = generation;
+            this.callback = callback;
         }
+        void complete(boolean success) { callback.onComplete(generation, success); }
         @Override public void close() {}
     }
 
