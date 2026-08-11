@@ -85,6 +85,22 @@ public final class EditorControllerTest {
         assertEquals(EditorState.SaveState.SAVED, fixture.controller.snapshot().state.saveState);
     }
 
+    @Test public void protectedRecoveryDocumentCannotBecomeAnEditableBlankReplacement() {
+        FakeMainThread main = new FakeMainThread();
+        FakePersistence persistence = new FakePersistence();
+        RecordingTarget target = new RecordingTarget();
+        EditorController controller = new EditorController(main, new InkDocument(), persistence,
+                new DocumentRenderer(target), false);
+
+        assertFalse(controller.snapshot().state.rawEligible);
+        assertEquals(EditorState.SaveState.FAILED, controller.snapshot().state.saveState);
+        assertFalse(controller.dispatch(EditorCommand.stroke(stroke(InkDocument.Brush.PEN))));
+        assertFalse(controller.dispatch(EditorCommand.addLayer()));
+        assertFalse(controller.dispatch(EditorCommand.retrySave()));
+        assertEquals(0, persistence.saves);
+        assertTrue(controller.snapshot().document().isEmpty());
+    }
+
     private static CompletedStroke stroke(InkDocument.Brush brush) {
         return new CompletedStroke(brush, 5f, 0xFF000000,
                 Arrays.asList(point(0.1f, 0.2f), point(0.4f, 0.5f)));
@@ -119,6 +135,7 @@ public final class EditorControllerTest {
             this.callback = callback;
         }
         void complete(boolean success) { callback.onComplete(generation, success); }
+        @Override public boolean flush(long timeoutMillis) { return true; }
         @Override public void close() {}
     }
 

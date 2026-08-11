@@ -12,6 +12,7 @@ final class EditorController {
     interface Persistence {
         interface Callback { void onComplete(long generation, boolean success); }
         void save(InkDocument document, long generation, Callback callback);
+        boolean flush(long timeoutMillis);
         void close();
     }
 
@@ -23,6 +24,7 @@ final class EditorController {
     private final MainThread mainThread;
     private final Persistence persistence;
     private final DocumentRenderer renderer;
+    private final boolean documentWritable;
     private final History history = new History(HISTORY_LIMIT);
     private final List<Listener> listeners = new ArrayList<>();
     private InkDocument document;
@@ -36,10 +38,17 @@ final class EditorController {
 
     EditorController(MainThread mainThread, InkDocument document, Persistence persistence,
             DocumentRenderer renderer) {
+        this(mainThread, document, persistence, renderer, true);
+    }
+
+    EditorController(MainThread mainThread, InkDocument document, Persistence persistence,
+            DocumentRenderer renderer, boolean documentWritable) {
         this.mainThread = mainThread;
         this.document = document;
         this.persistence = persistence;
         this.renderer = renderer;
+        this.documentWritable = documentWritable;
+        if (!documentWritable) saveState = EditorState.SaveState.FAILED;
     }
 
     void addListener(Listener listener) {
@@ -104,6 +113,7 @@ final class EditorController {
     void onPause() {
         assertMainThread();
         if (saveState == EditorState.SaveState.FAILED) queueSave();
+        persistence.flush(250L);
     }
 
     void close() {
@@ -151,6 +161,7 @@ final class EditorController {
     }
 
     private boolean selectLayer(String id) {
+        if (!documentWritable) return false;
         if (document.selectedLayer().id.equals(id) || !document.selectLayer(id)) return false;
         queueSave();
         return true;
@@ -163,6 +174,7 @@ final class EditorController {
     }
 
     private boolean mutateDocument(EditorCommand command) {
+        if (!documentWritable) return false;
         InkDocument before = document.copy();
         boolean changed;
         RenderRequest.Reason reason = RenderRequest.Reason.LAYER;
@@ -217,6 +229,7 @@ final class EditorController {
     }
 
     private boolean restoreHistory(boolean undo) {
+        if (!documentWritable) return false;
         InkDocument replacement = undo ? history.undo(document) : history.redo(document);
         if (replacement == null) return false;
         document.replaceWith(replacement);
@@ -227,6 +240,7 @@ final class EditorController {
     }
 
     private void queueSave() {
+        if (!documentWritable) return;
         saveGeneration++;
         saveState = EditorState.SaveState.SAVING;
         long generation = saveGeneration;
@@ -234,7 +248,7 @@ final class EditorController {
     }
 
     private boolean retrySave() {
-        if (saveState != EditorState.SaveState.FAILED) return false;
+        if (!documentWritable || saveState != EditorState.SaveState.FAILED) return false;
         queueSave();
         return true;
     }
@@ -251,7 +265,7 @@ final class EditorController {
 
     private EditorState state() {
         InkDocument.Layer selected = document.selectedLayer();
-        boolean eligible = selected.visible && panel == EditorState.Panel.NONE;
+        boolean eligible = documentWritable && selected.visible && panel == EditorState.Panel.NONE;
         return new EditorState(tool, presetId, width, tone, selected.id,
                 history.canUndo(), history.canRedo(), eligible, panel, saveState, saveGeneration);
     }

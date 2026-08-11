@@ -37,7 +37,9 @@ public final class MainActivity extends Activity {
         persistence = new ProjectPersistence(this);
         DocumentRenderer renderer = DocumentRenderer.forSurface(surface, density);
         AndroidMainThread mainThread = new AndroidMainThread();
-        controller = new EditorController(mainThread, persistence.load(), persistence, renderer);
+        InkDocument document = persistence.load();
+        controller = new EditorController(mainThread, document, persistence, renderer,
+                persistence.isWritable());
         BooxRawInkAdapter adapter = new BooxRawInkAdapter(surface, topBar, toolbar, density);
         rawInk = new RawInkSession(adapter, mainThread, this::afterPresentation,
                 new RawInkSession.GestureSink() {
