@@ -6,7 +6,7 @@ final class EditorState {
     enum Tool { PEN, PENCIL, MARKER, ERASER }
     enum Panel {
         NONE, BRUSH_RACK, TONE_RACK, LAYERS, LAYER_RENAME,
-        LAYER_CLEAR_CONFIRM, LAYER_DELETE_CONFIRM
+        LAYER_CLEAR_CONFIRM, LAYER_DELETE_CONFIRM, EXPORT
     }
     enum SaveState { SAVING, SAVED, FAILED }
 

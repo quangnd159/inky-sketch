@@ -17,13 +17,15 @@ Open and sketch. Launching the app goes directly to the canvas with the last loc
 - A small layer stack with add, select, rename, reorder, visibility, clear, and delete.
 - Undo and redo for marks, erasing, and layer mutations.
 - Automatic app-private saving with last-good backup recovery.
+- Permission-free export to a flattened PNG or editable native `.inky` document through
+  Android's system document picker.
 
 The tool set stays intentionally small. A new control must earn its permanent canvas space and remain usable without onboarding.
 
 ## Non-goals
 
 - Accounts, sharing, collaboration, cloud sync, galleries, or social features.
-- Import/export systems, file browsers, or storage permission requests.
+- An in-app file browser, broad storage permission requests, or cloud sharing.
 - Infinite canvases, page management, templates, or presentation tools.
 - Color illustration, photo editing, text layout, vector authoring, or desktop parity.
 - Brush marketplaces, plug-ins, scripting, AI generation, or asset libraries.

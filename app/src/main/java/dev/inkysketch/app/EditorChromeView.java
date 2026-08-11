@@ -19,6 +19,7 @@ final class EditorChromeView {
         void closePanel();
         void retrySave();
         void fullRefresh();
+        void export(ExportFormat format);
     }
 
     private final Context context;
@@ -38,6 +39,7 @@ final class EditorChromeView {
     private BinaryButton redo;
     private BinaryButton tone;
     private BinaryButton layers;
+    private BinaryButton export;
 
     EditorChromeView(Context context, FrameLayout root, Host host) {
         this.context = context;
@@ -75,6 +77,7 @@ final class EditorChromeView {
                 || state.panel == EditorState.Panel.LAYER_RENAME
                 || state.panel == EditorState.Panel.LAYER_CLEAR_CONFIRM
                 || state.panel == EditorState.Panel.LAYER_DELETE_CONFIRM);
+        export.setSelectedState(state.panel == EditorState.Panel.EXPORT);
 
         InkDocument.Layer selected = snapshot.document().selectedLayer();
         String save = state.saveState == EditorState.SaveState.SAVING ? "Saving…"
@@ -86,6 +89,7 @@ final class EditorChromeView {
 
         if (state.panel == EditorState.Panel.BRUSH_RACK) showBrushRack(state);
         else if (state.panel == EditorState.Panel.TONE_RACK) showToneRack(state);
+        else if (state.panel == EditorState.Panel.EXPORT) showExportRack();
         else rack.setVisibility(View.GONE);
     }
 
@@ -109,6 +113,9 @@ final class EditorChromeView {
         bar.addView(saveStatus, new LinearLayout.LayoutParams(-2, dp(52)));
         BinaryButton refreshButton = BinaryButton.create(context, "Refresh", view -> host.fullRefresh());
         bar.addView(refreshButton, new LinearLayout.LayoutParams(dp(72), dp(48)));
+        export = BinaryButton.create(context, "Export",
+                view -> host.openPanel(EditorState.Panel.EXPORT));
+        bar.addView(export, new LinearLayout.LayoutParams(dp(72), dp(48)));
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(-1, dp(56), Gravity.TOP);
         root.addView(bar, params);
         return bar;
@@ -198,6 +205,23 @@ final class EditorChromeView {
         BinaryButton done = BinaryButton.create(context, "Done", view -> host.closePanel());
         tones.addView(done, weighted());
         rack.addView(tones, new LinearLayout.LayoutParams(-1, dp(52)));
+        rack.setVisibility(View.VISIBLE);
+    }
+
+    private void showExportRack() {
+        rack.removeAllViews();
+        rack.addView(heading("Export a copy · your editable canvas stays safely autosaved"),
+                new LinearLayout.LayoutParams(-1, dp(36)));
+        LinearLayout choices = row();
+        BinaryButton png = BinaryButton.create(context, "PNG image",
+                view -> host.export(ExportFormat.PNG));
+        BinaryButton nativeDocument = BinaryButton.create(context, "Inky project",
+                view -> host.export(ExportFormat.NATIVE));
+        BinaryButton cancel = BinaryButton.create(context, "Cancel", view -> host.closePanel());
+        choices.addView(png, weighted());
+        choices.addView(nativeDocument, weighted());
+        choices.addView(cancel, weighted());
+        rack.addView(choices, new LinearLayout.LayoutParams(-1, dp(52)));
         rack.setVisibility(View.VISIBLE);
     }
 

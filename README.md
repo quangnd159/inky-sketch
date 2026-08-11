@@ -2,11 +2,17 @@
 
 Inky Sketch is a tiny, offline, e-ink-first drawing app for Android and BOOX. Open the app and sketch immediately: there is no account, cloud service, setup flow, or permission prompt.
 
-The editor provides pressure-aware pen, pencil, and marker brushes, a four-tone palette, three brush sizes, a pixel/segment eraser, layers, undo and redo, and automatic local saving. Live BOOX pen input uses Onyx's raw pen pipeline so ink can appear ahead of Android's normal compositor.
+The editor provides pressure-aware pen, pencil, and marker brushes, a four-tone palette, three brush sizes, a pixel/segment eraser, layers, undo and redo, automatic local saving, and permission-free export. Live BOOX pen input uses Onyx's raw pen pipeline so ink can appear ahead of Android's normal compositor.
 
 ## Privacy and storage
 
 Inky Sketch requests no Android permissions and makes no network connection at runtime. The current drawing is stored in app-private storage with atomic replacement and a last-good recovery backup.
+
+## Export
+
+Tap **Export** and choose a flattened PNG image or an editable `.inky` project. Android's
+system document picker chooses the destination, so Inky Sketch never requests broad storage
+access. Hidden layers are omitted from PNG output; `.inky` retains the complete layer stack.
 
 ## Build
 
