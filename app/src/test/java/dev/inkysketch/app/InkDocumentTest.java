@@ -24,7 +24,12 @@ public final class InkDocumentTest {
         ));
 
         assertTrue(document.eraseAt(0.5f, 0.5f, 30f, 1000, 1000));
-        assertEquals(2, document.selectedLayer().strokes.size());
+        assertEquals(3, document.selectedLayer().strokes.size());
+        for (InkDocument.Stroke fragment : document.selectedLayer().strokes) {
+            assertTrue(fragment.points.size() > 1);
+            assertEquals(InkDocument.Brush.PEN, fragment.brush);
+            assertEquals(3f, fragment.width, 0f);
+        }
         assertEquals(3, document.selectedLayer().strokes.get(0).points.size());
         assertEquals(3, document.selectedLayer().strokes.get(1).points.size());
     }
