@@ -24,12 +24,7 @@ public final class InkDocumentTest {
         ));
 
         assertTrue(document.eraseAt(0.5f, 0.5f, 30f, 1000, 1000));
-        assertEquals(3, document.selectedLayer().strokes.size());
-        for (InkDocument.Stroke fragment : document.selectedLayer().strokes) {
-            assertTrue(fragment.points.size() > 1);
-            assertEquals(InkDocument.Brush.PEN, fragment.brush);
-            assertEquals(3f, fragment.width, 0f);
-        }
+        assertEquals(2, document.selectedLayer().strokes.size());
         assertEquals(3, document.selectedLayer().strokes.get(0).points.size());
         assertEquals(3, document.selectedLayer().strokes.get(1).points.size());
     }
@@ -60,7 +55,12 @@ public final class InkDocumentTest {
         document.addStroke(new InkDocument.Stroke(InkDocument.Brush.PEN, 3f, 0,
                 Arrays.asList(point(.1f,.5f), point(.9f,.5f), point(.1f,.5f))));
         assertTrue(document.eraseGesture(Arrays.asList(point(.5f,.5f), point(.5f,.5f)), 20f, 1000, 1000));
-        assertEquals(2, document.selectedLayer().strokes.size());
+        assertEquals(3, document.selectedLayer().strokes.size());
+        for (InkDocument.Stroke fragment : document.selectedLayer().strokes) {
+            assertTrue(fragment.points.size() > 1);
+            assertEquals(InkDocument.Brush.PEN, fragment.brush);
+            assertEquals(3f, fragment.width, 0f);
+        }
     }
 
     @Test public void boundsRejectTenThousandDistantStrokesBeforeGeometry() {
