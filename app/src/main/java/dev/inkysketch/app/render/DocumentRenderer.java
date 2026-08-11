@@ -2,6 +2,7 @@ package dev.inkysketch.app;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -27,7 +28,11 @@ final class DocumentRenderer {
         try {
             for (InkDocument.Layer layer : snapshot.document().layers()) {
                 if (!layer.visible) continue;
-                for (InkDocument.Stroke stroke : layer.strokes) target.draw(layer.id, stroke);
+                for (InkDocument.Stroke stroke : layer.strokes) {
+                    if (request.dirtyRect == null || request.dirtyRect.intersects(stroke)) {
+                        target.draw(layer.id, stroke);
+                    }
+                }
             }
         } finally {
             target.end();
@@ -48,8 +53,17 @@ final class DocumentRenderer {
         @Override public boolean begin(RenderRequest request) {
             SurfaceHolder holder = surface.getHolder();
             if (holder == null) return false;
-            canvas = holder.lockCanvas();
+            Rect dirty = null;
+            if (request.dirtyRect != null && surface.getWidth() > 0 && surface.getHeight() > 0) {
+                RenderRequest.DirtyRect bounds = request.dirtyRect;
+                dirty = new Rect((int) (bounds.left * surface.getWidth()),
+                        (int) (bounds.top * surface.getHeight()),
+                        (int) Math.ceil(bounds.right * surface.getWidth()),
+                        (int) Math.ceil(bounds.bottom * surface.getHeight()));
+            }
+            canvas = dirty == null ? holder.lockCanvas() : holder.lockCanvas(dirty);
             if (canvas == null) return false;
+            if (dirty != null) canvas.clipRect(dirty);
             canvas.drawColor(Color.WHITE);
             return true;
         }
