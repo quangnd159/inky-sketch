@@ -75,7 +75,7 @@ public final class RawInkSessionTest {
 
     private static EditorState state(EditorState.Tool tool, EditorState.Panel panel, boolean eligible) {
         return new EditorState(tool, tool == EditorState.Tool.PENCIL ? "pencil" : "fountain", 5f,
-                0xFF000000, "layer", false, false, eligible, panel, EditorState.SaveState.CLEAN, 0);
+                0xFF000000, "layer", false, false, eligible, panel, EditorState.SaveState.SAVED, 0);
     }
 
     private static List<String> list(String... values) {

@@ -92,7 +92,10 @@ public final class EditorControllerTest {
 
     static final class FakePersistence implements EditorController.Persistence {
         int saves;
-        @Override public void save(InkDocument document) { saves++; }
+        @Override public void save(InkDocument document, long generation, Callback callback) {
+            saves++;
+            callback.onComplete(generation, true);
+        }
         @Override public void close() {}
     }
 

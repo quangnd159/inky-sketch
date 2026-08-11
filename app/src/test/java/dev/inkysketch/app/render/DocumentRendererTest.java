@@ -36,7 +36,7 @@ public final class DocumentRendererTest {
     private static EditorSnapshot snapshot(InkDocument document) {
         return new EditorSnapshot(document, new EditorState(EditorState.Tool.PEN, "fountain", 5f,
                 0xFF000000, document.selectedLayer().id, false, false, true,
-                EditorState.Panel.NONE, EditorState.SaveState.CLEAN, 0));
+                EditorState.Panel.NONE, EditorState.SaveState.SAVED, 0));
     }
 
     private static InkDocument.Stroke stroke(InkDocument.Brush brush) {
