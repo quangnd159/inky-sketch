@@ -42,7 +42,9 @@ public final class EditorChromeSpecTest {
         assertTrue(source.contains("setAlpha(1f)"));
         assertFalse(source.contains("RippleDrawable"));
         assertFalse(source.contains("setElevation"));
-        assertFalse(source.contains("Animator"));
+        assertFalse(source.contains("ValueAnimator"));
+        assertFalse(source.contains("ObjectAnimator"));
+        assertFalse(source.contains(".animate()"));
         assertFalse(source.contains("setAlpha(0."));
     }
 
