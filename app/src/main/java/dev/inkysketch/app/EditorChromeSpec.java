@@ -8,7 +8,7 @@ final class EditorChromeSpec {
             "Inker", "Pencil", "Marker", "Eraser", "Undo", "Redo", "Tone", "Layers"
     };
     static final String[] PRESET_IDS = {
-            "fineliner", "fountain", "ballpoint", "hb_pencil", "soft_pencil", "marker"
+            "fineliner.v1", "fountain.v1", "ballpoint.v1", "pencil-hb.v1", "pencil-soft.v1", "marker.v1"
     };
     static final String[] PRESET_LABELS = {
             "Fineliner", "Fountain", "Ballpoint", "HB Pencil", "Soft Pencil", "Marker"

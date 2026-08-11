@@ -57,11 +57,11 @@ final class BooxRawInkAdapter implements RawInkAdapter {
     @Override public void configure(Config config) {
         this.config = config;
         if (helper == null) return;
-        float factor = config.tool == EditorState.Tool.PENCIL ? 0.8f
-                : config.tool == EditorState.Tool.MARKER ? 1.8f : 1f;
+        BrushPreset preset = BrushCatalog.get(config.presetId);
+        float factor = preset.previewWidth / 3f;
         helper.setStrokeWidth(config.width * density * factor)
                 .setStrokeColor(config.tone)
-                .setStrokeStyle("pencil".equals(config.presetId)
+                .setStrokeStyle(BrushCatalog.rawPencil(config.presetId)
                         ? TouchHelper.STROKE_STYLE_PENCIL : TouchHelper.STROKE_STYLE_FOUNTAIN);
         helper.setBrushRawDrawingEnabled(config.tool != EditorState.Tool.ERASER);
         helper.setEraserRawDrawingEnabled(config.tool == EditorState.Tool.ERASER, 0);
@@ -114,12 +114,6 @@ final class BooxRawInkAdapter implements RawInkAdapter {
         return Collections.unmodifiableList(normalized);
     }
 
-    private InkDocument.Brush brush() {
-        if (config != null && config.tool == EditorState.Tool.PENCIL) return InkDocument.Brush.PENCIL;
-        if (config != null && config.tool == EditorState.Tool.MARKER) return InkDocument.Brush.MARKER;
-        return InkDocument.Brush.PEN;
-    }
-
     private final RawInputCallback callback = new RawInputCallback() {
         @Override public void onBeginRawDrawing(boolean stylus, TouchPoint point) {}
         @Override public void onEndRawDrawing(boolean stylus, TouchPoint point) {}
@@ -132,7 +126,8 @@ final class BooxRawInkAdapter implements RawInkAdapter {
             if (listener == null || config == null) return;
             List<InkDocument.Point> normalized = normalize(points.getPoints());
             if (!normalized.isEmpty()) listener.onCompletedStroke(
-                    new CompletedStroke(brush(), config.width, config.tone, normalized));
+                    new CompletedStroke(BrushCatalog.brush(config.presetId), config.presetId,
+                            config.width, config.tone, normalized));
         }
 
         @Override public void onBeginRawErasing(boolean stylus, TouchPoint point) {}

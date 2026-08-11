@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.UUID;
 
 final class InkDocument {
-    static final int FORMAT_VERSION = 2;
+    static final int FORMAT_VERSION = 3;
+    static final int LAYERED_FORMAT_VERSION = 2;
     static final int LEGACY_FORMAT_VERSION = 1;
 
     enum Brush {
@@ -42,24 +43,33 @@ final class InkDocument {
     static final class Stroke {
         final String id;
         final Brush brush;
+        final String presetId;
+        final int presetVersion;
         final float width;
         final int color;
         final List<Point> points;
 
         Stroke(Brush brush, float width, int color, List<Point> points) {
-            this(UUID.randomUUID().toString(), brush, width, color, points);
+            this(UUID.randomUUID().toString(), brush, BrushCatalog.legacy(brush), 1, width, color, points);
         }
 
         Stroke(String id, Brush brush, float width, int color, List<Point> points) {
+            this(id, brush, BrushCatalog.legacy(brush), 1, width, color, points);
+        }
+
+        Stroke(String id, Brush brush, String presetId, int presetVersion, float width, int color,
+                List<Point> points) {
             this.id = id;
             this.brush = brush;
+            this.presetId = BrushCatalog.get(presetId).id;
+            this.presetVersion = presetVersion;
             this.width = width;
             this.color = color;
             this.points = Collections.unmodifiableList(new ArrayList<>(points));
         }
 
         Stroke withPoints(List<Point> replacement) {
-            return new Stroke(UUID.randomUUID().toString(), brush, width, color, replacement);
+            return new Stroke(UUID.randomUUID().toString(), brush, presetId, presetVersion, width, color, replacement);
         }
     }
 
@@ -235,7 +245,9 @@ final class InkDocument {
     static InkDocument fromJson(JSONObject root) throws JSONException {
         int version = root.optInt("version", -1);
         if (version == LEGACY_FORMAT_VERSION) return migrateV1(root);
-        if (version != FORMAT_VERSION) throw new JSONException("Unsupported document version " + version);
+        if (version != LAYERED_FORMAT_VERSION && version != FORMAT_VERSION) {
+            throw new JSONException("Unsupported document version " + version);
+        }
 
         InkDocument document = new InkDocument();
         document.layers.clear();
@@ -269,6 +281,8 @@ final class InkDocument {
         JSONObject strokeJson = new JSONObject();
         strokeJson.put("id", stroke.id);
         strokeJson.put("brush", stroke.brush.name().toLowerCase());
+        strokeJson.put("presetId", stroke.presetId);
+        strokeJson.put("presetVersion", stroke.presetVersion);
         strokeJson.put("width", stroke.width);
         strokeJson.put("color", stroke.color);
         JSONArray points = new JSONArray();
@@ -301,13 +315,12 @@ final class InkDocument {
                 ));
             }
             if (!points.isEmpty()) {
-                destination.add(new Stroke(
-                        strokeJson.optString("id", UUID.randomUUID().toString()),
-                        Brush.from(strokeJson.optString("brush", "pen")),
+                Brush brush = Brush.from(strokeJson.optString("brush", "pen"));
+                String presetId = strokeJson.optString("presetId", BrushCatalog.legacy(brush));
+                destination.add(new Stroke(strokeJson.optString("id", UUID.randomUUID().toString()),
+                        brush, presetId, strokeJson.optInt("presetVersion", 1),
                         (float) strokeJson.optDouble("width", 5f),
-                        strokeJson.optInt("color", 0xFF000000),
-                        points
-                ));
+                        strokeJson.optInt("color", 0xFF000000), points));
             }
         }
     }

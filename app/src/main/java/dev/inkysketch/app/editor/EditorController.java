@@ -27,7 +27,7 @@ final class EditorController {
     private final List<Listener> listeners = new ArrayList<>();
     private InkDocument document;
     private EditorState.Tool tool = EditorState.Tool.PEN;
-    private String presetId = "fountain";
+    private String presetId = "fountain.v1";
     private float width = 5f;
     private int tone = 0xFF000000;
     private EditorState.Panel panel = EditorState.Panel.NONE;
@@ -112,9 +112,9 @@ final class EditorController {
     }
 
     private boolean setTool(EditorState.Tool selected) {
-        String selectedPreset = selected == EditorState.Tool.PEN ? "fountain"
-                : selected == EditorState.Tool.PENCIL ? "hb_pencil"
-                : selected == EditorState.Tool.MARKER ? "marker" : "eraser";
+        String selectedPreset = selected == EditorState.Tool.PEN ? "fountain.v1"
+                : selected == EditorState.Tool.PENCIL ? "pencil-hb.v1"
+                : selected == EditorState.Tool.MARKER ? "marker.v1" : "eraser";
         if (tool == selected && presetId.equals(selectedPreset)) return false;
         tool = selected;
         presetId = selectedPreset;
@@ -123,9 +123,9 @@ final class EditorController {
 
     private boolean setPreset(String selected) {
         EditorState.Tool selectedTool;
-        if ("hb_pencil".equals(selected) || "soft_pencil".equals(selected)) {
+        if ("pencil-hb.v1".equals(selected) || "pencil-soft.v1".equals(selected)) {
             selectedTool = EditorState.Tool.PENCIL;
-        } else if ("marker".equals(selected)) {
+        } else if ("marker.v1".equals(selected)) {
             selectedTool = EditorState.Tool.MARKER;
         } else {
             selectedTool = EditorState.Tool.PEN;
@@ -139,14 +139,14 @@ final class EditorController {
     private boolean setWidth(float selected) {
         boolean changed = Float.compare(width, selected) != 0 || tool == EditorState.Tool.ERASER;
         width = selected;
-        if (tool == EditorState.Tool.ERASER) { tool = EditorState.Tool.PEN; presetId = "fountain"; }
+        if (tool == EditorState.Tool.ERASER) { tool = EditorState.Tool.PEN; presetId = "fountain.v1"; }
         return changed;
     }
 
     private boolean setTone(int selected) {
         boolean changed = tone != selected || tool == EditorState.Tool.ERASER;
         tone = selected;
-        if (tool == EditorState.Tool.ERASER) { tool = EditorState.Tool.PEN; presetId = "fountain"; }
+        if (tool == EditorState.Tool.ERASER) { tool = EditorState.Tool.PEN; presetId = "fountain.v1"; }
         return changed;
     }
 
@@ -170,8 +170,8 @@ final class EditorController {
             case ADD_STROKE:
                 CompletedStroke completed = (CompletedStroke) command.value;
                 changed = document.selectedLayer().visible && !completed.points.isEmpty();
-                if (changed) document.addStroke(new InkDocument.Stroke(
-                        completed.brush, completed.width, completed.tone, completed.points));
+                if (changed) document.addStroke(new InkDocument.Stroke(java.util.UUID.randomUUID().toString(),
+                        completed.brush, completed.presetId, 1, completed.width, completed.tone, completed.points));
                 reason = RenderRequest.Reason.STROKE;
                 break;
             case ERASE:
