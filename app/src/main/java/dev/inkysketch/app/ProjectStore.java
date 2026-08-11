@@ -130,11 +130,11 @@ final class ProjectStore {
     }
 
     void save(InkDocument document, long generation, SaveListener listener) {
-        PendingSave rejected = null;
         synchronized (this) {
-            latestGeneration = Math.max(latestGeneration, generation);
+            if (generation < latestGeneration) return;
+            latestGeneration = generation;
             if (!writesAllowed || closed) {
-                rejected = new PendingSave(null, generation, listener);
+                listener.onComplete(generation, false);
             } else {
                 pending = new PendingSave(document.copy(), generation, listener);
                 if (!active) {
@@ -143,7 +143,6 @@ final class ProjectStore {
                 }
             }
         }
-        if (rejected != null) rejected.listener.onComplete(rejected.generation, false);
     }
 
     private void drainWrites() {
@@ -154,14 +153,14 @@ final class ProjectStore {
                 pending = null;
             }
             boolean success = writeSnapshot(current.snapshot, current.generation);
-            boolean notify;
             synchronized (this) {
                 if (pending != null) continue;
                 active = false;
                 notifyAll();
-                notify = current.generation == latestGeneration;
+                if (current.generation == latestGeneration) {
+                    current.listener.onComplete(current.generation, success);
+                }
             }
-            if (notify) current.listener.onComplete(current.generation, success);
             return;
         }
     }
