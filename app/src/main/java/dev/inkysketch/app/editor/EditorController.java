@@ -10,7 +10,8 @@ final class EditorController {
     }
 
     interface Persistence {
-        void save(InkDocument document);
+        interface Callback { void onComplete(long generation, boolean success); }
+        void save(InkDocument document, long generation, Callback callback);
         void close();
     }
 
@@ -26,10 +27,11 @@ final class EditorController {
     private final List<Listener> listeners = new ArrayList<>();
     private InkDocument document;
     private EditorState.Tool tool = EditorState.Tool.PEN;
+    private String presetId = "fountain";
     private float width = 5f;
     private int tone = 0xFF000000;
     private EditorState.Panel panel = EditorState.Panel.NONE;
-    private EditorState.SaveState saveState = EditorState.SaveState.CLEAN;
+    private EditorState.SaveState saveState = EditorState.SaveState.SAVED;
     private long saveGeneration;
 
     EditorController(MainThread mainThread, InkDocument document, Persistence persistence,
@@ -53,6 +55,9 @@ final class EditorController {
             case SET_TOOL:
                 changed = setTool((EditorState.Tool) command.value);
                 break;
+            case SET_PRESET:
+                changed = setPreset((String) command.value);
+                break;
             case SET_WIDTH:
                 changed = setWidth((Float) command.value);
                 break;
@@ -70,6 +75,9 @@ final class EditorController {
                 break;
             case REDO:
                 changed = restoreHistory(false);
+                break;
+            case RETRY_SAVE:
+                changed = retrySave();
                 break;
             default:
                 changed = mutateDocument(command);
@@ -95,7 +103,7 @@ final class EditorController {
 
     void onPause() {
         assertMainThread();
-        persistence.save(document);
+        if (saveState == EditorState.SaveState.FAILED) queueSave();
     }
 
     void close() {
@@ -104,22 +112,41 @@ final class EditorController {
     }
 
     private boolean setTool(EditorState.Tool selected) {
-        if (tool == selected) return false;
+        String selectedPreset = selected == EditorState.Tool.PEN ? "fountain"
+                : selected == EditorState.Tool.PENCIL ? "hb_pencil"
+                : selected == EditorState.Tool.MARKER ? "marker" : "eraser";
+        if (tool == selected && presetId.equals(selectedPreset)) return false;
         tool = selected;
+        presetId = selectedPreset;
+        return true;
+    }
+
+    private boolean setPreset(String selected) {
+        EditorState.Tool selectedTool;
+        if ("hb_pencil".equals(selected) || "soft_pencil".equals(selected)) {
+            selectedTool = EditorState.Tool.PENCIL;
+        } else if ("marker".equals(selected)) {
+            selectedTool = EditorState.Tool.MARKER;
+        } else {
+            selectedTool = EditorState.Tool.PEN;
+        }
+        if (presetId.equals(selected) && tool == selectedTool) return false;
+        presetId = selected;
+        tool = selectedTool;
         return true;
     }
 
     private boolean setWidth(float selected) {
         boolean changed = Float.compare(width, selected) != 0 || tool == EditorState.Tool.ERASER;
         width = selected;
-        if (tool == EditorState.Tool.ERASER) tool = EditorState.Tool.PEN;
+        if (tool == EditorState.Tool.ERASER) { tool = EditorState.Tool.PEN; presetId = "fountain"; }
         return changed;
     }
 
     private boolean setTone(int selected) {
         boolean changed = tone != selected || tool == EditorState.Tool.ERASER;
         tone = selected;
-        if (tool == EditorState.Tool.ERASER) tool = EditorState.Tool.PEN;
+        if (tool == EditorState.Tool.ERASER) { tool = EditorState.Tool.PEN; presetId = "fountain"; }
         return changed;
     }
 
@@ -203,14 +230,31 @@ final class EditorController {
 
     private void queueSave() {
         saveGeneration++;
-        saveState = EditorState.SaveState.QUEUED;
-        persistence.save(document);
+        saveState = EditorState.SaveState.SAVING;
+        long generation = saveGeneration;
+        persistence.save(document, generation, this::onSaveComplete);
+    }
+
+    private boolean retrySave() {
+        if (saveState != EditorState.SaveState.FAILED) return false;
+        queueSave();
+        return true;
+    }
+
+    private void onSaveComplete(long generation, boolean success) {
+        Runnable completion = () -> {
+            if (generation != saveGeneration) return;
+            saveState = success ? EditorState.SaveState.SAVED : EditorState.SaveState.FAILED;
+            notifyListeners();
+        };
+        if (mainThread.isMainThread()) completion.run();
+        else mainThread.post(completion);
     }
 
     private EditorState state() {
         InkDocument.Layer selected = document.selectedLayer();
         boolean eligible = selected.visible && panel == EditorState.Panel.NONE;
-        return new EditorState(tool, presetId(tool), width, tone, selected.id,
+        return new EditorState(tool, presetId, width, tone, selected.id,
                 history.canUndo(), history.canRedo(), eligible, panel, saveState, saveGeneration);
     }
 
@@ -223,9 +267,4 @@ final class EditorController {
         if (!mainThread.isMainThread()) throw new IllegalStateException("Editor dispatch must run on the main thread");
     }
 
-    private static String presetId(EditorState.Tool tool) {
-        if (tool == EditorState.Tool.PENCIL) return "pencil";
-        if (tool == EditorState.Tool.ERASER) return "eraser";
-        return "fountain";
-    }
 }

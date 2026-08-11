@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 final class ProjectStore {
+    interface SaveListener { void onComplete(long generation, boolean success); }
     private static final String TAG = "InkySketchStore";
     private static final String FILE_NAME = "canvas.json";
     private static final String BACKUP_NAME = "canvas.json.bak";
@@ -64,6 +65,11 @@ final class ProjectStore {
         writer.execute(() -> writeSnapshot(snapshot));
     }
 
+    void save(InkDocument document, long generation, SaveListener listener) {
+        InkDocument snapshot = document.copy();
+        writer.execute(() -> listener.onComplete(generation, writeSnapshot(snapshot)));
+    }
+
     void close() {
         writer.shutdown();
         try {
@@ -75,7 +81,7 @@ final class ProjectStore {
         }
     }
 
-    private void writeSnapshot(InkDocument snapshot) {
+    private boolean writeSnapshot(InkDocument snapshot) {
         File temporary = new File(directory, FILE_NAME + ".new");
         File target = new File(directory, FILE_NAME);
         File backup = new File(directory, BACKUP_NAME);
@@ -98,8 +104,10 @@ final class ProjectStore {
             } catch (AtomicMoveNotSupportedException ignored) {
                 Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
+            return true;
         } catch (Exception error) {
             Log.e(TAG, "Unable to save project", error);
+            return false;
         }
     }
 }

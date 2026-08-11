@@ -4,8 +4,11 @@ import java.util.Objects;
 
 final class EditorState {
     enum Tool { PEN, PENCIL, MARKER, ERASER }
-    enum Panel { NONE, LAYERS, LAYER_ACTIONS, RENAME, CONFIRM_CLEAR, CONFIRM_DELETE }
-    enum SaveState { CLEAN, QUEUED }
+    enum Panel {
+        NONE, BRUSH_RACK, TONE_RACK, LAYERS, LAYER_RENAME,
+        LAYER_CLEAR_CONFIRM, LAYER_DELETE_CONFIRM
+    }
+    enum SaveState { SAVING, SAVED, FAILED }
 
     final Tool activeTool;
     final String activePresetId;

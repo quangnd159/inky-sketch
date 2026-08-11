@@ -2,9 +2,9 @@ package dev.inkysketch.app;
 
 final class EditorCommand {
     enum Type {
-        SET_TOOL, SET_WIDTH, SET_TONE, SELECT_LAYER, SET_PANEL,
+        SET_TOOL, SET_PRESET, SET_WIDTH, SET_TONE, SELECT_LAYER, SET_PANEL,
         ADD_STROKE, ERASE, ADD_LAYER, RENAME_LAYER, MOVE_LAYER,
-        TOGGLE_LAYER_VISIBILITY, CLEAR_LAYER, DELETE_LAYER, UNDO, REDO
+        TOGGLE_LAYER_VISIBILITY, CLEAR_LAYER, DELETE_LAYER, UNDO, REDO, RETRY_SAVE
     }
 
     final Type type;
@@ -16,6 +16,7 @@ final class EditorCommand {
     }
 
     static EditorCommand tool(EditorState.Tool value) { return new EditorCommand(Type.SET_TOOL, value); }
+    static EditorCommand preset(String id) { return new EditorCommand(Type.SET_PRESET, id); }
     static EditorCommand width(float value) { return new EditorCommand(Type.SET_WIDTH, value); }
     static EditorCommand tone(int value) { return new EditorCommand(Type.SET_TONE, value); }
     static EditorCommand selectLayer(String id) { return new EditorCommand(Type.SELECT_LAYER, id); }
@@ -30,4 +31,5 @@ final class EditorCommand {
     static EditorCommand deleteLayer() { return new EditorCommand(Type.DELETE_LAYER, null); }
     static EditorCommand undo() { return new EditorCommand(Type.UNDO, null); }
     static EditorCommand redo() { return new EditorCommand(Type.REDO, null); }
+    static EditorCommand retrySave() { return new EditorCommand(Type.RETRY_SAVE, null); }
 }

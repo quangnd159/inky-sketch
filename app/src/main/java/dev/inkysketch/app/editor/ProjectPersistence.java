@@ -10,6 +10,8 @@ final class ProjectPersistence implements EditorController.Persistence {
     }
 
     InkDocument load() { return store.load(); }
-    @Override public void save(InkDocument document) { store.save(document); }
+    @Override public void save(InkDocument document, long generation, Callback callback) {
+        store.save(document, generation, callback::onComplete);
+    }
     @Override public void close() { store.close(); }
 }
