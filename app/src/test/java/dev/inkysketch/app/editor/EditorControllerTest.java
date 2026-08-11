@@ -54,13 +54,17 @@ public final class EditorControllerTest {
     @Test public void eraseUndoAndVisibilityEachRequestExactlyOneRender() {
         Fixture fixture = new Fixture();
         fixture.controller.dispatch(EditorCommand.stroke(stroke(InkDocument.Brush.MARKER)));
+        String originalId = fixture.controller.snapshot().document().selectedLayer().strokes.get(0).id;
+        int savesBeforeErase = fixture.persistence.saves;
         fixture.target.beginCount = 0;
-        CompletedErase erase = new CompletedErase(Arrays.asList(point(0.1f, 0.2f)), 30f, 1000, 1000);
+        CompletedErase erase = new CompletedErase(Arrays.asList(point(0.1f, 0.2f), point(0.4f, 0.5f)), 30f, 1000, 1000);
         assertTrue(fixture.controller.dispatch(EditorCommand.erase(erase)));
+        assertEquals(savesBeforeErase + 1, fixture.persistence.saves);
         assertEquals(1, fixture.target.beginCount);
         fixture.target.beginCount = 0;
         assertTrue(fixture.controller.dispatch(EditorCommand.undo()));
         assertEquals(1, fixture.target.beginCount);
+        assertEquals(originalId, fixture.controller.snapshot().document().selectedLayer().strokes.get(0).id);
         fixture.target.beginCount = 0;
         assertTrue(fixture.controller.dispatch(EditorCommand.toggleLayerVisibility()));
         assertEquals(1, fixture.target.beginCount);

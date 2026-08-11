@@ -178,10 +178,8 @@ final class EditorController {
                 CompletedErase erase = (CompletedErase) command.value;
                 changed = false;
                 if (document.selectedLayer().visible) {
-                    for (InkDocument.Point point : erase.points) {
-                        changed |= document.eraseAt(point.x, point.y, erase.radiusPixels,
-                                erase.viewportWidth, erase.viewportHeight);
-                    }
+                    changed = document.eraseGesture(erase.points, erase.radiusPixels,
+                            erase.viewportWidth, erase.viewportHeight);
                 }
                 reason = RenderRequest.Reason.ERASE;
                 break;

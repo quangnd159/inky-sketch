@@ -5,6 +5,8 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,8 +25,48 @@ public final class InkDocumentTest {
 
         assertTrue(document.eraseAt(0.5f, 0.5f, 30f, 1000, 1000));
         assertEquals(2, document.selectedLayer().strokes.size());
-        assertEquals(2, document.selectedLayer().strokes.get(0).points.size());
-        assertEquals(2, document.selectedLayer().strokes.get(1).points.size());
+        assertEquals(3, document.selectedLayer().strokes.get(0).points.size());
+        assertEquals(3, document.selectedLayer().strokes.get(1).points.size());
+    }
+
+    @Test public void sparseEraserSegmentCutsSparseStrokeAndPreservesMetadata() {
+        InkDocument document = new InkDocument();
+        document.addStroke(new InkDocument.Stroke("affected", InkDocument.Brush.MARKER, "marker.v1", 7,
+                9f, 0xFF555555, Arrays.asList(point(.1f, .5f), point(.9f, .5f))));
+        document.addStroke(new InkDocument.Stroke("untouched", InkDocument.Brush.PEN, "fountain.v1", 3,
+                4f, 0xFF000000, Arrays.asList(point(.1f, .1f), point(.9f, .1f))));
+        assertTrue(document.eraseGesture(Arrays.asList(point(.5f, .2f), point(.5f, .8f)), 25f, 1000, 1000));
+        assertEquals(3, document.selectedLayer().strokes.size());
+        InkDocument.Stroke untouched = document.selectedLayer().strokes.get(2);
+        assertEquals("untouched", untouched.id);
+        for (int i = 0; i < 2; i++) {
+            InkDocument.Stroke fragment = document.selectedLayer().strokes.get(i);
+            assertEquals("marker.v1", fragment.presetId);
+            assertEquals(7, fragment.presetVersion);
+            assertEquals(9f, fragment.width, 0f);
+            assertEquals(0xFF555555, fragment.color);
+        }
+    }
+
+    @Test public void dotAndRepeatedCrossingsAreErasedOnce() {
+        InkDocument document = new InkDocument();
+        document.addStroke(new InkDocument.Stroke(InkDocument.Brush.PEN, 3f, 0,
+                Arrays.asList(point(.5f, .5f))));
+        document.addStroke(new InkDocument.Stroke(InkDocument.Brush.PEN, 3f, 0,
+                Arrays.asList(point(.1f,.5f), point(.9f,.5f), point(.1f,.5f))));
+        assertTrue(document.eraseGesture(Arrays.asList(point(.5f,.5f), point(.5f,.5f)), 20f, 1000, 1000));
+        assertEquals(2, document.selectedLayer().strokes.size());
+    }
+
+    @Test public void boundsRejectTenThousandDistantStrokesBeforeGeometry() {
+        List<InkDocument.Stroke> strokes = new ArrayList<>();
+        for (int i = 0; i < 10000; i++) strokes.add(new InkDocument.Stroke("far-" + i,
+                InkDocument.Brush.PEN, 2f, 0, Arrays.asList(point(.9f,.9f), point(1f,1f))));
+        SegmentEraser.Result result = SegmentEraser.erase(strokes,
+                Arrays.asList(point(.1f,.1f)), 10f, 1000, 1000);
+        assertFalse(result.changed);
+        assertEquals(0, result.candidates);
+        assertEquals(10000, result.rejected);
     }
 
     @Test

@@ -184,26 +184,19 @@ final class InkDocument {
     }
 
     boolean eraseAt(float normalizedX, float normalizedY, float radiusPixels, int width, int height) {
+        return eraseGesture(Collections.singletonList(new Point(normalizedX, normalizedY, .5f, 0L)),
+                radiusPixels, width, height);
+    }
+
+    boolean eraseGesture(List<Point> points, float radiusPixels, int width, int height) {
         Layer layer = selectedLayer();
-        List<Stroke> replacement = new ArrayList<>();
-        boolean changed = false;
-        for (Stroke stroke : layer.strokes) {
-            List<List<Point>> fragments = eraseStroke(stroke, normalizedX, normalizedY, radiusPixels, width, height);
-            if (fragments.size() == 1 && fragments.get(0) == stroke.points) {
-                replacement.add(stroke);
-                continue;
-            }
-            changed = true;
-            for (List<Point> fragment : fragments) {
-                if (!fragment.isEmpty()) replacement.add(stroke.withPoints(fragment));
-            }
-        }
-        if (changed) {
+        SegmentEraser.Result result = SegmentEraser.erase(layer.strokes, points, radiusPixels, width, height);
+        if (result.changed) {
             layer.strokes.clear();
-            layer.strokes.addAll(replacement);
+            layer.strokes.addAll(result.strokes);
             touch();
         }
-        return changed;
+        return result.changed;
     }
 
     InkDocument copy() {
