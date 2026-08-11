@@ -30,6 +30,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    lint {
+        // BOOX raw-pen compatibility currently relies on the established target behavior.
+        disable += "ExpiredTargetSdkVersion"
+    }
+
     packaging {
         jniLibs {
             pickFirsts += "lib/**/libc++_shared.so"
