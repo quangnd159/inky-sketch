@@ -23,6 +23,8 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/wrapper-validation@v5
       - uses: gradle/actions/setup-gradle@v5
+      - name: Verify Gradle wrapper version
+        run: ./gradlew --version
       - name: Test, lint, and assemble
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug --stacktrace
       - name: Verify the APK requests no permissions
